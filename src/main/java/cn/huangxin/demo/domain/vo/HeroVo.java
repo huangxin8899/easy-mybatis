@@ -9,9 +9,22 @@ import cn.huangxin.em.anno.ResultField;
  */
 public class HeroVo {
 
+    /**
+     * 此处@ResultField注解声明返回字段，默认为变量名的驼峰映射下划线
+     * tableName属性为表名
+     * fieldName属性为表中的字段名
+     * 解析格式为：{tableName}.{fieldName} AS 变量名
+     * 下方注解等价于，hero.id AS heroId
+     */
     @ResultField(tableName = "hero", fieldName = "id")
     private Integer heroId;
+    /**
+     * 等价于，name AS name
+     */
     private String name;
+    /**
+     * 等价于，way AS way
+     */
     private String way;
 
     public Integer getHeroId() {

@@ -55,6 +55,10 @@ public class SelectFactory {
         return sql.WHERE(segment);
     }
 
+    public static <Q> SqlEntity<Q> getSql(Q queryObj) {
+        return (SqlEntity<Q>) getSql(queryObj, queryObj.getClass());
+    }
+
     public static <Q, T> SqlEntity<T> getSql(Q queryObj, Class<T> voClass, AbstractJoin<?>... joins) {
 
 
