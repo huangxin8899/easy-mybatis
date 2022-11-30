@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * 提示：SqlMapper,SqlEntity,LeftJoin,SelectFactory均为easy-mybatis内置类
@@ -62,5 +63,31 @@ public class AppTest {
         SqlEntity<HeroVo> sqlEntity = SelectFactory.getSql(hero, HeroVo.class, leftJoin);
         HeroVo heroVo = sqlMapper.selectOne(sqlEntity);
         System.out.println(heroVo);
+    }
+
+    @Test
+    void testUpdate() {
+        Hero hero = new Hero();
+        hero.setId(10);
+        hero.setWayId(5);
+        sqlMapper.sqlUpdate("UPDATE `em_demo`.`hero` SET `way_id` = #{wayId} WHERE `id` = #{id}", hero);
+        System.out.println(hero);
+    }
+
+    @Test
+    void testInsert() {
+        Hero hero = new Hero();
+        hero.setWayId(5);
+        hero.setName("布隆");
+        sqlMapper.sqlInsert("INSERT INTO `em_demo`.`hero` (`way_id`, `name`) VALUES (#{wayId}, #{name})", hero);
+        System.out.println(hero);
+    }
+
+    @Test
+    void testSession() throws IOException, InterruptedException {
+        testById();
+        testById();
+        testUpdate();
+        testById();
     }
 }

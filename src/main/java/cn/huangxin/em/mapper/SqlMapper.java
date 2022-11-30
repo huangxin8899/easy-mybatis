@@ -13,7 +13,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,19 +25,10 @@ import java.util.Map;
 @Component
 public class SqlMapper implements SqlBaseMapper {
 
-    private SqlSession sqlSession;
-    private MSUtils msUtils;
-
     @Resource
     SqlSessionFactory sqlSessionFactory;
 
     public SqlMapper() {
-    }
-
-    @PostConstruct
-    private void init() {
-        this.sqlSession = sqlSessionFactory.openSession(true);
-        this.msUtils = new MSUtils(sqlSession.getConfiguration());
     }
 
     private <T> T getOne(List<T> list) {
@@ -117,8 +107,11 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public List<Map<String, Object>> selectList(String sql) {
-        String msId = this.msUtils.select(sql);
-        return this.sqlSession.selectList(msId);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            String msId = msUtils.select(sql);
+            return sqlSession.selectList(msId);
+        }
     }
 
     /**
@@ -130,9 +123,12 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public List<Map<String, Object>> selectList(String sql, Object value) {
-        Class<?> parameterType = value != null ? value.getClass() : null;
-        String msId = this.msUtils.selectDynamic(sql, parameterType);
-        return this.sqlSession.selectList(msId, value);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            Class<?> parameterType = value != null ? value.getClass() : null;
+            String msId = msUtils.selectDynamic(sql, parameterType);
+            return sqlSession.selectList(msId, value);
+        }
     }
 
     /**
@@ -144,14 +140,17 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public <T> List<T> selectList(String sql, Class<T> resultType) {
-        String msId;
-        if (resultType == null) {
-            msId = this.msUtils.select(sql);
-        } else {
-            msId = this.msUtils.select(sql, resultType);
-        }
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            String msId;
+            if (resultType == null) {
+                msId = msUtils.select(sql);
+            } else {
+                msId = msUtils.select(sql, resultType);
+            }
 
-        return this.sqlSession.selectList(msId);
+            return sqlSession.selectList(msId);
+        }
     }
 
     /**
@@ -164,15 +163,18 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public <T> List<T> selectList(String sql, Object value, Class<T> resultType) {
-        Class<?> parameterType = value != null ? value.getClass() : null;
-        String msId;
-        if (resultType == null) {
-            msId = this.msUtils.selectDynamic(sql, parameterType);
-        } else {
-            msId = this.msUtils.selectDynamic(sql, parameterType, resultType);
-        }
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            Class<?> parameterType = value != null ? value.getClass() : null;
+            String msId;
+            if (resultType == null) {
+                msId = msUtils.selectDynamic(sql, parameterType);
+            } else {
+                msId = msUtils.selectDynamic(sql, parameterType, resultType);
+            }
 
-        return this.sqlSession.selectList(msId, value);
+            return sqlSession.selectList(msId, value);
+        }
     }
 
     @Override
@@ -188,8 +190,11 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlInsert(String sql) {
-        String msId = this.msUtils.insert(sql);
-        return this.sqlSession.insert(msId);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            String msId = msUtils.insert(sql);
+            return sqlSession.insert(msId);
+        }
     }
 
     /**
@@ -201,9 +206,12 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlInsert(String sql, Object value) {
-        Class<?> parameterType = value != null ? value.getClass() : null;
-        String msId = this.msUtils.insertDynamic(sql, parameterType);
-        return this.sqlSession.insert(msId, value);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            Class<?> parameterType = value != null ? value.getClass() : null;
+            String msId = msUtils.insertDynamic(sql, parameterType);
+            return sqlSession.insert(msId, value);
+        }
     }
 
     /**
@@ -214,8 +222,11 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlUpdate(String sql) {
-        String msId = this.msUtils.update(sql);
-        return this.sqlSession.update(msId);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            String msId = msUtils.update(sql);
+            return sqlSession.update(msId);
+        }
     }
 
     /**
@@ -227,9 +238,12 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlUpdate(String sql, Object value) {
-        Class<?> parameterType = value != null ? value.getClass() : null;
-        String msId = this.msUtils.updateDynamic(sql, parameterType);
-        return this.sqlSession.update(msId, value);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            Class<?> parameterType = value != null ? value.getClass() : null;
+            String msId = msUtils.updateDynamic(sql, parameterType);
+            return sqlSession.update(msId, value);
+        }
     }
 
     /**
@@ -240,8 +254,11 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlDelete(String sql) {
-        String msId = this.msUtils.delete(sql);
-        return this.sqlSession.delete(msId);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            String msId = msUtils.delete(sql);
+            return sqlSession.delete(msId);
+        }
     }
 
     /**
@@ -253,9 +270,12 @@ public class SqlMapper implements SqlBaseMapper {
      */
     @Override
     public int sqlDelete(String sql, Object value) {
-        Class<?> parameterType = value != null ? value.getClass() : null;
-        String msId = this.msUtils.deleteDynamic(sql, parameterType);
-        return this.sqlSession.delete(msId, value);
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            Class<?> parameterType = value != null ? value.getClass() : null;
+            String msId = msUtils.deleteDynamic(sql, parameterType);
+            return sqlSession.delete(msId, value);
+        }
     }
 
     /**
