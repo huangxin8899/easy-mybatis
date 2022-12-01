@@ -5,6 +5,7 @@ import cn.huangxin.em.SqlConstant;
 import cn.huangxin.em.SqlEntity;
 import cn.huangxin.em.anno.*;
 import cn.huangxin.em.join.*;
+import cn.huangxin.em.util.AnnoUtil;
 import cn.huangxin.em.util.CommonUtil;
 import org.apache.ibatis.jdbc.SQL;
 
@@ -120,22 +121,15 @@ public class SelectFactory {
         return sql;
     }
 
-    private static <T> SQL createFromSegment(Class<T> aClass, SQL sql) {
-        if (aClass.isAnnotationPresent(From.class)) {
-            return sql.FROM(aClass.getAnnotation(From.class).value());
-        }
-        String simpleName = Introspector.decapitalize(aClass.getSimpleName());
-        return sql.FROM(camelToUnderscore(simpleName));
+    private static <Q> SQL createFromSegment(Q queryObj, SQL sql) {
+        return createFromSegment(queryObj.getClass(), sql);
     }
 
-    private static <Q> SQL createFromSegment(Q queryObj, SQL sql) {
-        Class<?> aClass = queryObj.getClass();
-        if (aClass.isAnnotationPresent(From.class)) {
-            return sql.FROM(aClass.getAnnotation(From.class).value());
-        }
-        String simpleName = Introspector.decapitalize(queryObj.getClass().getSimpleName());
-        return sql.FROM(camelToUnderscore(simpleName));
+    private static <T> SQL createFromSegment(Class<T> aClass, SQL sql) {
+        return sql.FROM(AnnoUtil.getTableName(aClass));
     }
+
+
 
     private static <T> SQL createJoinSegment(SqlEntity<T> sqlEntity, AbstractJoin<?>[] joins) {
         SQL sql = sqlEntity.getSql();
@@ -163,15 +157,14 @@ public class SelectFactory {
             for (Field field : fields) {
                 boolean accessible = field.isAccessible();
                 field.setAccessible(true);
-                QueryField queryField = field.getAnnotation(QueryField.class);
-                if (queryField != null) {
-                    String fieldName = queryField.fieldName();
-                    fieldName = isBlank(fieldName) ? camelToUnderscore(field.getName()) : fieldName;
+                Query query = field.getAnnotation(Query.class);
+                if (query != null) {
                     Object val = field.get(queryObj);
                     if (CommonUtil.isEmpty(val)) {
                         continue;
                     }
-                    String resolve = QueryType.resolve(queryField.type(), fieldName, val, paramMap);
+                    String fieldName = AnnoUtil.getFieldName(field);
+                    String resolve = QueryType.resolve(query.value(), fieldName, val, paramMap);
                     if (isNotEmptyStr((resolve))) {
                         sql.WHERE(resolve);
                     }
@@ -194,19 +187,16 @@ public class SelectFactory {
                 field.setAccessible(true);
                 GroupBy groupBy = field.getAnnotation(GroupBy.class);
                 if (groupBy != null) {
-                    String fieldName = groupBy.fieldName();
-                    fieldName = isBlank(fieldName) ? camelToUnderscore(field.getName()) : fieldName;
-                    sql.GROUP_BY(fieldName);
+                    sql.GROUP_BY(AnnoUtil.getFieldName(field));
                 }
                 Having having = field.getAnnotation(Having.class);
                 if (having != null) {
-                    String fieldName = having.fieldName();
-                    fieldName = isBlank(fieldName) ? camelToUnderscore(field.getName()) : fieldName;
                     Object val = field.get(queryObj);
                     if (CommonUtil.isEmpty(val)) {
                         continue;
                     }
-                    String resolve = QueryType.resolve(having.type(), fieldName, val, paramMap);
+                    String fieldName = AnnoUtil.getFieldName(field);
+                    String resolve = QueryType.resolve(having.value(), fieldName, val, paramMap);
                     if (isNotEmptyStr(resolve)) {
                         sql.HAVING(resolve);
                     }
@@ -227,9 +217,8 @@ public class SelectFactory {
             field.setAccessible(true);
             OrderBy orderBy = field.getAnnotation(OrderBy.class);
             if (orderBy != null) {
-                String fieldName = orderBy.fieldName();
-                fieldName = isBlank(fieldName) ? camelToUnderscore(field.getName()) : fieldName;
-                String sort = orderBy.sort() ? SqlConstant._ASC_ : SqlConstant._DESC_;
+                String fieldName = AnnoUtil.getFieldName(field);
+                String sort = orderBy.value() ? SqlConstant._ASC_ : SqlConstant._DESC_;
                 String segment = fieldName + sort;
                 sql.ORDER_BY(segment);
             }

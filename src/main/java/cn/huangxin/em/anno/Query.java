@@ -13,13 +13,8 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface QueryField {
+public @interface Query {
 
-    /**
-     * 表中的字段名
-     */
-    String fieldName() default "";
-
-    QueryType type() default QueryType.EQ;
+    QueryType value() default QueryType.EQ;
 
 }

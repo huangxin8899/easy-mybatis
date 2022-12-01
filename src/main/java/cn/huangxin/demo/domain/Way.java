@@ -2,7 +2,7 @@ package cn.huangxin.demo.domain;
 
 import cn.huangxin.em.QueryType;
 import cn.huangxin.em.anno.PrimaryKey;
-import cn.huangxin.em.anno.QueryField;
+import cn.huangxin.em.anno.Query;
 
 /**
  * Way
@@ -12,9 +12,9 @@ import cn.huangxin.em.anno.QueryField;
 public class Way {
 
     @PrimaryKey
-    @QueryField
+    @Query
     private Integer id;
-    @QueryField(type = QueryType.LIKE)
+    @Query(QueryType.LIKE)
     private String way;
 
     public Integer getId() {

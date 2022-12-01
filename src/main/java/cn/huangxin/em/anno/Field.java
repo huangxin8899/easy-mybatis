@@ -7,6 +7,10 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GroupBy {
+public @interface Field {
 
+    /**
+     * 表中的字段名
+     */
+    String value();
 }

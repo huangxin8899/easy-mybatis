@@ -3,6 +3,8 @@ package cn.huangxin.em.mapper;
 import cn.huangxin.em.SqlEntity;
 import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.exceptions.TooManyResultsException;
+import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
+import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -309,6 +311,16 @@ public class SqlMapper implements SqlBaseMapper {
             this.configuration.addMappedStatement(ms);
         }
 
+        private void newInsertMappedStatement(String msId, SqlSource sqlSource) {
+            this.configuration.setUseGeneratedKeys(true);
+            MappedStatement ms = (new MappedStatement.Builder(this.configuration, msId, sqlSource, SqlCommandType.INSERT)).resultMaps(new ArrayList<ResultMap>() {
+                {
+                    this.add((new ResultMap.Builder(MSUtils.this.configuration, "defaultResultMap", Integer.TYPE, new ArrayList(0))).build());
+                }
+            }).keyProperty("id").build();
+            this.configuration.addMappedStatement(ms);
+        }
+
         private void newUpdateMappedStatement(String msId, SqlSource sqlSource, SqlCommandType sqlCommandType) {
             MappedStatement ms = (new MappedStatement.Builder(this.configuration, msId, sqlSource, sqlCommandType)).resultMaps(new ArrayList<ResultMap>() {
                 {
@@ -358,7 +370,7 @@ public class SqlMapper implements SqlBaseMapper {
             String msId = this.newMsId(sql, SqlCommandType.INSERT);
             if (!this.hasMappedStatement(msId)) {
                 StaticSqlSource sqlSource = new StaticSqlSource(this.configuration, sql);
-                this.newUpdateMappedStatement(msId, sqlSource, SqlCommandType.INSERT);
+                this.newInsertMappedStatement(msId, sqlSource);
             }
             return msId;
         }
@@ -367,7 +379,7 @@ public class SqlMapper implements SqlBaseMapper {
             String msId = this.newMsId(sql + parameterType, SqlCommandType.INSERT);
             if (!this.hasMappedStatement(msId)) {
                 SqlSource sqlSource = this.languageDriver.createSqlSource(this.configuration, sql, parameterType);
-                this.newUpdateMappedStatement(msId, sqlSource, SqlCommandType.INSERT);
+                this.newInsertMappedStatement(msId, sqlSource);
             }
             return msId;
         }

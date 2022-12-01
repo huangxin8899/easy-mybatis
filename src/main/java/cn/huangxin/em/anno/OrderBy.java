@@ -10,13 +10,8 @@ import java.lang.annotation.Target;
 public @interface OrderBy {
 
     /**
-     * 表中的字段名
-     */
-    String fieldName() default "";
-
-    /**
      * 排序方式：true=ASC,false=DESC
      */
-    boolean sort() default true;
+    boolean value() default true;
 
 }

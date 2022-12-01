@@ -1,9 +1,11 @@
 package cn.huangxin.em.util;
 
 import cn.huangxin.em.SerializableFunction;
+import cn.huangxin.em.anno.From;
 
 import java.beans.Introspector;
 import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -70,13 +72,14 @@ public class FunctionUtil {
             int begin = serializedLambda.getInstantiatedMethodType().indexOf("L") + 1;
             int end = serializedLambda.getInstantiatedMethodType().indexOf(";");
             String className = serializedLambda.getInstantiatedMethodType().substring(begin, end).replace("/", ".");
-            String tableName = Introspector.decapitalize(className.substring(className.lastIndexOf(".") + 1));
             Class<?> clazz = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+            Field field = clazz.getDeclaredField(fieldName);
 
             CLASS_MAP.put(function, clazz);
-            COLUMN_NAME_MAP.put(function, CommonUtil.camelToUnderscore(fieldName));
-            TABLE_NAME_MAP.put(function, CommonUtil.camelToUnderscore(tableName));
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | ClassNotFoundException e) {
+            COLUMN_NAME_MAP.put(function, AnnoUtil.getFieldName(field));
+            TABLE_NAME_MAP.put(function, AnnoUtil.getTableName(clazz));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | ClassNotFoundException |
+                 NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
     }

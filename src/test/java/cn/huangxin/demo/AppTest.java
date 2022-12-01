@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * 提示：SqlMapper,SqlEntity,LeftJoin,SelectFactory均为easy-mybatis内置类
@@ -28,10 +29,12 @@ public class AppTest {
     @Resource
     private SqlMapper sqlMapper;
 
+
+
     @Test
     void testOne() {
         Hero hero = new Hero();
-        hero.setName("李青");
+        hero.setName("菲欧娜");
          // 等价于,SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (name LIKE CONCAT('%',?,'%'))
         SqlEntity<Hero> sqlEntity = SelectFactory.getSql(hero);
         Hero selectOne = sqlMapper.selectOne(sqlEntity);
@@ -90,4 +93,14 @@ public class AppTest {
         testUpdate();
         testById();
     }
+
+    @Test
+    void testLast() {
+        testInsert();
+        testInsert();
+        Map<String, Object> map = sqlMapper.selectOne("SELECT LAST_INSERT_ID()");
+         System.out.println();
+    }
+
+
 }

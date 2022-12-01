@@ -11,10 +11,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Having {
 
-    /**
-     * 表中的字段名
-     */
-    String fieldName() default "";
-
-    QueryType type() default QueryType.EQ;
+    QueryType value() default QueryType.EQ;
 }
