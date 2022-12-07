@@ -1,10 +1,10 @@
 package cn.huangxin.em.mapper;
 
-import cn.huangxin.em.SqlEntity;
+import cn.huangxin.em.factory.InsertEntity;
+import cn.huangxin.em.factory.SelectEntity;
+import cn.huangxin.em.util.AnnoUtil;
 import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.exceptions.TooManyResultsException;
-import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
-import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +34,22 @@ public class SqlMapper implements SqlBaseMapper {
     public SqlMapper() {
     }
 
+    @Override
+    public <T> T selectOne(SelectEntity<T> selectEntity) {
+        List<T> list = this.selectList(selectEntity.getSql().toString(), selectEntity.getParamMap(), selectEntity.getType());
+        return this.getOne(list);
+    }
+
+    @Override
+    public <T> List<T> selectList(SelectEntity<T> selectEntity) {
+        return this.selectList(selectEntity.getSql().toString(), selectEntity.getParamMap(), selectEntity.getType());
+    }
+
+    @Override
+    public int insert(InsertEntity insertEntity) {
+        return this.sqlInsert(insertEntity.getScript(), insertEntity.getMateObj());
+    }
+
     private <T> T getOne(List<T> list) {
         if (list.size() == 1) {
             return list.get(0);
@@ -44,118 +61,6 @@ public class SqlMapper implements SqlBaseMapper {
     }
 
     /**
-     * 查询单条数据返回Map<String, Object>
-     *
-     * @param sql sql语句
-     * @return Map<String, Object>
-     */
-    @Override
-    public Map<String, Object> selectOne(String sql) {
-        List<Map<String, Object>> list = this.selectList(sql);
-        return (Map) this.getOne(list);
-    }
-
-    /**
-     * 查询单条数据返回Map<String, Object>
-     *
-     * @param sql   sql语句
-     * @param value 参数
-     * @return Map<String, Object>
-     */
-    @Override
-    public Map<String, Object> selectOne(String sql, Object value) {
-        List<Map<String, Object>> list = this.selectList(sql, value);
-        return (Map) this.getOne(list);
-    }
-
-    /**
-     * 查询单条数据返回实体类型
-     *
-     * @param sql        sql语句
-     * @param resultType 具体类型
-     * @return 定义的实体类型
-     */
-    @Override
-    public <T> T selectOne(String sql, Class<T> resultType) {
-        List<T> list = this.selectList(sql, resultType);
-        return this.getOne(list);
-    }
-
-    /**
-     * 查询单条数据返回实体类型
-     *
-     * @param sql        sql语句
-     * @param value      参数
-     * @param resultType 具体类型
-     * @return 定义的实体类型
-     */
-    @Override
-    public <T> T selectOne(String sql, Object value, Class<T> resultType) {
-        List<T> list = this.selectList(sql, value, resultType);
-        return this.getOne(list);
-    }
-
-    @Override
-    public <T> T selectOne(SqlEntity<T> sqlEntity) {
-        List<T> list = this.selectList(sqlEntity.getSql().toString(), sqlEntity.getParamMap(), sqlEntity.getType());
-        return this.getOne(list);
-    }
-
-    /**
-     * 查询数据返回
-     *
-     * @param sql sql语句
-     * @return List<Map < String, Object>>
-     */
-    @Override
-    public List<Map<String, Object>> selectList(String sql) {
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
-            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            String msId = msUtils.select(sql);
-            return sqlSession.selectList(msId);
-        }
-    }
-
-    /**
-     * 查询数据返回
-     *
-     * @param sql   sql语句
-     * @param value 参数
-     * @return List<Map < String, Object>>
-     */
-    @Override
-    public List<Map<String, Object>> selectList(String sql, Object value) {
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
-            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            Class<?> parameterType = value != null ? value.getClass() : null;
-            String msId = msUtils.selectDynamic(sql, parameterType);
-            return sqlSession.selectList(msId, value);
-        }
-    }
-
-    /**
-     * 查询数据返回
-     *
-     * @param sql        sql语句
-     * @param resultType 具体类型
-     * @return List<T>
-     */
-    @Override
-    public <T> List<T> selectList(String sql, Class<T> resultType) {
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
-            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            String msId;
-            if (resultType == null) {
-                msId = msUtils.select(sql);
-            } else {
-                msId = msUtils.select(sql, resultType);
-            }
-
-            return sqlSession.selectList(msId);
-        }
-    }
-
-    /**
      * 查询数据返回
      *
      * @param sql        sql语句
@@ -163,8 +68,7 @@ public class SqlMapper implements SqlBaseMapper {
      * @param resultType 具体类型
      * @return List<T>
      */
-    @Override
-    public <T> List<T> selectList(String sql, Object value, Class<T> resultType) {
+    private  <T> List<T> selectList(String sql, Object value, Class<T> resultType) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
             Class<?> parameterType = value != null ? value.getClass() : null;
@@ -179,26 +83,6 @@ public class SqlMapper implements SqlBaseMapper {
         }
     }
 
-    @Override
-    public <T> List<T> selectList(SqlEntity<T> sqlEntity) {
-        return this.selectList(sqlEntity.getSql().toString(), sqlEntity.getParamMap(), sqlEntity.getType());
-    }
-
-    /**
-     * 插入数据
-     *
-     * @param sql sql语句
-     * @return int
-     */
-    @Override
-    public int sqlInsert(String sql) {
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
-            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            String msId = msUtils.insert(sql);
-            return sqlSession.insert(msId);
-        }
-    }
-
     /**
      * 插入数据
      *
@@ -206,15 +90,21 @@ public class SqlMapper implements SqlBaseMapper {
      * @param value 参数
      * @return int
      */
-    @Override
-    public int sqlInsert(String sql, Object value) {
+    private int sqlInsert(String sql, Object value) {
+        if (value == null) {
+            return 0;
+        }
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            Class<?> parameterType = value != null ? value.getClass() : null;
+            Class<?> parameterType = value.getClass();
+            if (Collection.class.isAssignableFrom(parameterType)) {
+                parameterType = ((Collection<?>) value).toArray()[0].getClass();
+            }
             String msId = msUtils.insertDynamic(sql, parameterType);
             return sqlSession.insert(msId, value);
         }
     }
+
 
     /**
      * 更新数据
@@ -311,13 +201,13 @@ public class SqlMapper implements SqlBaseMapper {
             this.configuration.addMappedStatement(ms);
         }
 
-        private void newInsertMappedStatement(String msId, SqlSource sqlSource) {
+        private void newInsertMappedStatement(String msId, SqlSource sqlSource, Class<?> parameterType) {
             this.configuration.setUseGeneratedKeys(true);
             MappedStatement ms = (new MappedStatement.Builder(this.configuration, msId, sqlSource, SqlCommandType.INSERT)).resultMaps(new ArrayList<ResultMap>() {
                 {
                     this.add((new ResultMap.Builder(MSUtils.this.configuration, "defaultResultMap", Integer.TYPE, new ArrayList(0))).build());
                 }
-            }).keyProperty("id").build();
+            }).keyProperty(AnnoUtil.getPrimaryName(parameterType)).keyColumn(AnnoUtil.getPrimaryColumn(parameterType)).build();
             this.configuration.addMappedStatement(ms);
         }
 
@@ -366,20 +256,11 @@ public class SqlMapper implements SqlBaseMapper {
             return msId;
         }
 
-        private String insert(String sql) {
-            String msId = this.newMsId(sql, SqlCommandType.INSERT);
-            if (!this.hasMappedStatement(msId)) {
-                StaticSqlSource sqlSource = new StaticSqlSource(this.configuration, sql);
-                this.newInsertMappedStatement(msId, sqlSource);
-            }
-            return msId;
-        }
-
         private String insertDynamic(String sql, Class<?> parameterType) {
             String msId = this.newMsId(sql + parameterType, SqlCommandType.INSERT);
             if (!this.hasMappedStatement(msId)) {
                 SqlSource sqlSource = this.languageDriver.createSqlSource(this.configuration, sql, parameterType);
-                this.newInsertMappedStatement(msId, sqlSource);
+                this.newInsertMappedStatement(msId, sqlSource, parameterType);
             }
             return msId;
         }

@@ -1,6 +1,6 @@
 package cn.huangxin.em.join;
 
-import cn.huangxin.em.CommonBuild;
+import cn.huangxin.em.SqlBuild;
 import cn.huangxin.em.QueryType;
 import cn.huangxin.em.SerializableFunction;
 import cn.huangxin.em.SqlConstant;
@@ -13,7 +13,7 @@ import java.util.*;
  * @author 黄鑫
  * @description Join
  */
-public abstract class AbstractJoin<T> extends CommonBuild<T> {
+public abstract class AbstractJoin<T> implements SqlBuild<T> {
 
     protected Class<?> leftClass;
     protected String leftTableName;
@@ -23,7 +23,7 @@ public abstract class AbstractJoin<T> extends CommonBuild<T> {
     protected String rightColumnName;
     protected StringBuilder joinSegment = new StringBuilder();
     protected List<JoinCondition> conditions = new ArrayList<>();
-    protected final T typedThis = (T) this;
+    protected final T typeThis = (T) this;
 
     public Class<?> getLeftClass() {
         return leftClass;
@@ -105,7 +105,7 @@ public abstract class AbstractJoin<T> extends CommonBuild<T> {
         if (flag) {
             this.conditions.add(new JoinCondition(queryType, this.getColumn(function), param));
         }
-        return typedThis;
+        return typeThis;
     }
 
     @Override
@@ -113,6 +113,6 @@ public abstract class AbstractJoin<T> extends CommonBuild<T> {
         if (flag) {
             this.conditions.add(new JoinCondition(queryType, column, param));
         }
-        return typedThis;
+        return typeThis;
     }
 }

@@ -134,16 +134,16 @@ public class AppTest {
         Hero hero = new Hero();
         hero.setName("李青");
          // 等价于,SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (name LIKE CONCAT('%',?,'%'))
-        SqlEntity<Hero> sqlEntity = SelectFactory.getSql(hero);
-        Hero selectOne = sqlMapper.selectOne(sqlEntity);
+        SqlEntity<Hero> selectEntity = SelectFactory.getSql(hero);
+        Hero selectOne = sqlMapper.selectOne(selectEntity);
         System.out.println(selectOne);
     }
 
     @Test
     void testById() {
         // 等价于，SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (id = ?)
-        SqlEntity<Hero> sqlEntity = SelectFactory.getSqlById(1, Hero.class);
-        Hero hero = sqlMapper.selectOne(sqlEntity);
+        SqlEntity<Hero> selectEntity = SelectFactory.getSqlById(1, Hero.class);
+        Hero hero = sqlMapper.selectOne(selectEntity);
         System.out.println(hero);
     }
 
@@ -161,8 +161,8 @@ public class AppTest {
         LEFT OUTER JOIN way ON hero.way_id = way.id AND way.way = ?
         WHERE (name LIKE CONCAT('%',?,'%'))
          */
-        SqlEntity<HeroVo> sqlEntity = SelectFactory.getSql(hero, HeroVo.class, leftJoin);
-        HeroVo heroVo = sqlMapper.selectOne(sqlEntity);
+        SqlEntity<HeroVo> selectEntity = SelectFactory.getSql(hero, HeroVo.class, leftJoin);
+        HeroVo heroVo = sqlMapper.selectOne(selectEntity);
         System.out.println(heroVo);
     }
 }

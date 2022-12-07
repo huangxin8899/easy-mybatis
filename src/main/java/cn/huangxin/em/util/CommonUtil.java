@@ -1,8 +1,6 @@
 package cn.huangxin.em.util;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -227,4 +225,15 @@ public class CommonUtil {
         return false;
     }
 
+    public static boolean isBaseClass(Class clz) {
+        try {
+            return clz.equals(String.class) || ((Class) clz.getField("TYPE").get(null)).isPrimitive();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isColl(Class<?> clazz) {
+        return Collection.class.isAssignableFrom(clazz) || clazz.isArray();
+    }
 }

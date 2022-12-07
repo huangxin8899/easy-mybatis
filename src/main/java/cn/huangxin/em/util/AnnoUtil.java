@@ -1,9 +1,12 @@
 package cn.huangxin.em.util;
 
 import cn.huangxin.em.anno.From;
+import cn.huangxin.em.anno.PrimaryKey;
 
 import java.beans.Introspector;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import static cn.huangxin.em.util.CommonUtil.camelToUnderscore;
 
@@ -26,5 +29,25 @@ public class AnnoUtil {
             return aClass.getAnnotation(From.class).value();
         }
         return camelToUnderscore(Introspector.decapitalize(aClass.getSimpleName()));
+    }
+
+    public static String getPrimaryName(Class<?> aClass) {
+        List<Field> fields = CommonUtil.getFields(aClass, new ArrayList<>());
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                return field.getName();
+            }
+        }
+        return "id";
+    }
+
+    public static String getPrimaryColumn(Class<?> aClass) {
+        List<Field> fields = CommonUtil.getFields(aClass, new ArrayList<>());
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                return getFieldName(field);
+            }
+        }
+        return "id";
     }
 }

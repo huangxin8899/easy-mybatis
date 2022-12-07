@@ -2,14 +2,11 @@ package cn.huangxin.em.factory;
 
 import cn.huangxin.em.QueryType;
 import cn.huangxin.em.SqlConstant;
-import cn.huangxin.em.SqlEntity;
 import cn.huangxin.em.anno.*;
 import cn.huangxin.em.join.*;
 import cn.huangxin.em.util.AnnoUtil;
 import cn.huangxin.em.util.CommonUtil;
-import org.apache.ibatis.jdbc.SQL;
 
-import java.beans.Introspector;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -25,73 +22,69 @@ import static cn.huangxin.em.util.CommonUtil.*;
 public class SelectFactory {
 
 
-    public static <Q, T> SqlEntity<T> getSqlById(Serializable id, Class<T> voClass) {
-        SqlEntity<T> sqlEntity = new SqlEntity<>(voClass);
+    public static <T> SelectEntity<T> getSqlById(Serializable id, Class<T> resultClass) {
+        SelectEntity<T> selectEntity = new SelectEntity<>(resultClass);
         // select部分生成
-        createSelectSegment(voClass, sqlEntity.getSql());
+        createSelectSegment(resultClass, selectEntity);
 
         // FROM部分
-        createFromSegment(voClass, sqlEntity.getSql());
+        createFromSegment(resultClass, selectEntity);
 
         // 条件部分生成
-        createWhereSegment(id, voClass, sqlEntity);
+        createWhereSegment(id, resultClass, selectEntity);
 
-        return sqlEntity;
+        return selectEntity;
     }
 
-    private static <T> SQL createWhereSegment(Serializable id, Class<T> voClass, SqlEntity<T> sqlEntity) {
-        SQL sql = sqlEntity.getSql();
-        Map<String, Object> paramMap = sqlEntity.getParamMap();
-        String segment = new String();
-        List<Field> fields = getFields(voClass, new ArrayList<>());
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(PrimaryKey.class)) {
-                segment = QueryType.resolve(QueryType.EQ, camelToUnderscore(field.getName()), id, paramMap);
-                break;
-            }
-        }
-        if (isEmptyStr(segment)) {
-            throw new NullPointerException("SqlFactory#getSqlById()方法，id为null");
-        }
-        return sql.WHERE(segment);
+    public static <Q> SelectEntity<Q> getSql(Q queryObj) {
+        return (SelectEntity<Q>) getSql(Boolean.TRUE, queryObj, queryObj.getClass());
     }
 
-    public static <Q> SqlEntity<Q> getSql(Q queryObj) {
-        return (SqlEntity<Q>) getSql(queryObj, queryObj.getClass());
+    public static <Q> SelectEntity<Q> getSql(boolean enableAnno, Q queryObj) {
+        return (SelectEntity<Q>) getSql(enableAnno, queryObj, queryObj.getClass());
     }
 
-    public static <Q, T> SqlEntity<T> getSql(Q queryObj, Class<T> voClass, AbstractJoin<?>... joins) {
+    public static <Q, T> SelectEntity<T> getSql(Q queryObj, Class<T> resultClass, AbstractJoin<?>... joins) {
+        return getSql(Boolean.TRUE, queryObj, resultClass, joins);
+    }
+
+    public static <Q, T> SelectEntity<T> getSql(boolean enableAnno, Q queryObj, Class<T> resultClass, AbstractJoin<?>... joins) {
 
 
-        SqlEntity<T> sqlEntity = new SqlEntity<>(voClass);
+        SelectEntity<T> selectEntity = new SelectEntity<>(resultClass);
 
         // select部分生成
-        createSelectSegment(voClass, sqlEntity.getSql());
+        createSelectSegment(resultClass, selectEntity);
 
         // FROM部分
-        createFromSegment(queryObj, sqlEntity.getSql());
+        createFromSegment(queryObj, selectEntity);
 
         // 联表部分生成
-        createJoinSegment(sqlEntity, joins);
+        createJoinSegment(selectEntity, joins);
 
-        // 条件部分生成
-        createConditionSegment(queryObj, sqlEntity);
+        if (enableAnno) {
 
-        // 分组部分生成
-        createGroupBy(queryObj, sqlEntity, joins);
+            // 条件部分生成
+            createConditionSegment(queryObj, selectEntity);
 
-        // 排序部分生成
-        createOrderBy(queryObj, sqlEntity, joins);
+            // 分组部分生成
+            createGroupBy(queryObj, selectEntity, joins);
 
-        System.out.println(sqlEntity.getSql().toString());
+            // 排序部分生成
+            createOrderBy(queryObj, selectEntity, joins);
+        }
 
-        return sqlEntity;
+
+        return selectEntity;
     }
 
     /**
      * 返回部分sql生成
      */
-    private static SQL createSelectSegment(Class<?> clazz, SQL sql) {
+    private static <T> void createSelectSegment(Class<?> clazz, SelectEntity<T> selectEntity) {
+        if (CommonUtil.isBaseClass(clazz)) {
+            throw new RuntimeException("暂不支持基本类型及其包装类");
+        }
         List<Field> fields = getFields(clazz, new ArrayList<>());
         for (Field field : fields) {
             StringBuilder segment = new StringBuilder();
@@ -116,42 +109,55 @@ public class SelectFactory {
             }
             segment.append(SqlConstant._AS_)
                     .append(field.getName());
-            sql.SELECT(segment.toString());
+            selectEntity.getSelectList().add(segment.toString());
         }
-        return sql;
     }
 
-    private static <Q> SQL createFromSegment(Q queryObj, SQL sql) {
-        return createFromSegment(queryObj.getClass(), sql);
+    private static <Q, T> void createFromSegment(Q queryObj, SelectEntity<T> selectEntity) {
+        selectEntity.getFromList().add(AnnoUtil.getTableName(queryObj.getClass()));
     }
 
-    private static <T> SQL createFromSegment(Class<T> aClass, SQL sql) {
-        return sql.FROM(AnnoUtil.getTableName(aClass));
+    private static <T> void createFromSegment(Class<T> aClass, SelectEntity<T> selectEntity) {
+        selectEntity.getFromList().add(AnnoUtil.getTableName(aClass));
     }
 
-
-
-    private static <T> SQL createJoinSegment(SqlEntity<T> sqlEntity, AbstractJoin<?>[] joins) {
-        SQL sql = sqlEntity.getSql();
+    private static <T> void createJoinSegment(SelectEntity<T> selectEntity, AbstractJoin<?>[] joins) {
         for (AbstractJoin<?> join : joins) {
             if (join instanceof LeftJoin) {
-                sql.LEFT_OUTER_JOIN(join.getJoinSegment(sqlEntity.getParamMap()));
+                selectEntity.getLeftOuterJoinList().add(join.getJoinSegment(selectEntity.getParamMap()));
             } else if (join instanceof RightJoin) {
-                sql.RIGHT_OUTER_JOIN(join.getJoinSegment(sqlEntity.getParamMap()));
+                selectEntity.getRightOuterJoinList().add(join.getJoinSegment(selectEntity.getParamMap()));
             } else if (join instanceof InnerJoin) {
-                sql.INNER_JOIN(join.getJoinSegment(sqlEntity.getParamMap()));
+                selectEntity.getInnerJoinList().add(join.getJoinSegment(selectEntity.getParamMap()));
             } else if (join instanceof Join) {
-                sql.JOIN(join.getJoinSegment(sqlEntity.getParamMap()));
+                selectEntity.getJoinList().add(join.getJoinSegment(selectEntity.getParamMap()));
             } else if (join instanceof OuterJoin) {
-                sql.OUTER_JOIN(join.getJoinSegment(sqlEntity.getParamMap()));
+                selectEntity.getOuterJoinList().add(join.getJoinSegment(selectEntity.getParamMap()));
             }
         }
-        return sql;
     }
 
-    private static <Q, T> SQL createConditionSegment(Q queryObj, SqlEntity<T> sqlEntity) {
-        SQL sql = sqlEntity.getSql();
-        Map<String, Object> paramMap = sqlEntity.getParamMap();
+    private static <T> void createWhereSegment(Serializable id, Class<T> resultClass, SelectEntity<T> selectEntity) {
+        if (CommonUtil.isBaseClass(resultClass)) {
+            throw new RuntimeException("暂不支持基本类型及其包装类");
+        }
+        Map<String, Object> paramMap = selectEntity.getParamMap();
+        String segment = new String();
+        List<Field> fields = getFields(resultClass, new ArrayList<>());
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(PrimaryKey.class)) {
+                segment = QueryType.resolve(QueryType.EQ, camelToUnderscore(field.getName()), id, paramMap);
+                break;
+            }
+        }
+        if (isEmptyStr(segment)) {
+            throw new NullPointerException();
+        }
+        selectEntity.getWhereList().add(segment);
+    }
+
+    private static <Q, T> void createConditionSegment(Q queryObj, SelectEntity<T> selectEntity) {
+        Map<String, Object> paramMap = selectEntity.getParamMap();
         try {
             List<Field> fields = getFields(queryObj.getClass(), new ArrayList<>());
             for (Field field : fields) {
@@ -163,10 +169,10 @@ public class SelectFactory {
                     if (CommonUtil.isEmpty(val)) {
                         continue;
                     }
-                    String fieldName = AnnoUtil.getFieldName(field);
-                    String resolve = QueryType.resolve(query.value(), fieldName, val, paramMap);
+                    String column = AnnoUtil.getTableName(queryObj.getClass()) + SqlConstant.DOT + AnnoUtil.getFieldName(field);
+                    String resolve = QueryType.resolve(query.value(), column, val, paramMap);
                     if (isNotEmptyStr((resolve))) {
-                        sql.WHERE(resolve);
+                        selectEntity.getWhereList().add(resolve);
                     }
                 }
                 field.setAccessible(accessible);
@@ -174,12 +180,10 @@ public class SelectFactory {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        return sql;
     }
 
-    private static <Q, T> SQL createGroupBy(Q queryObj, SqlEntity<T> sqlEntity, AbstractJoin<?>[] joins) {
-        SQL sql = sqlEntity.getSql();
-        Map<String, Object> paramMap = sqlEntity.getParamMap();
+    private static <Q, T> void createGroupBy(Q queryObj, SelectEntity<T> selectEntity, AbstractJoin<?>[] joins) {
+        Map<String, Object> paramMap = selectEntity.getParamMap();
         try {
             List<Field> fields = getAllFields(queryObj, joins);
             for (Field field : fields) {
@@ -187,7 +191,7 @@ public class SelectFactory {
                 field.setAccessible(true);
                 GroupBy groupBy = field.getAnnotation(GroupBy.class);
                 if (groupBy != null) {
-                    sql.GROUP_BY(AnnoUtil.getFieldName(field));
+                    selectEntity.getGroupByList().add(AnnoUtil.getFieldName(field));
                 }
                 Having having = field.getAnnotation(Having.class);
                 if (having != null) {
@@ -198,7 +202,7 @@ public class SelectFactory {
                     String fieldName = AnnoUtil.getFieldName(field);
                     String resolve = QueryType.resolve(having.value(), fieldName, val, paramMap);
                     if (isNotEmptyStr(resolve)) {
-                        sql.HAVING(resolve);
+                        selectEntity.getHavingList().add(resolve);
                     }
                 }
                 field.setAccessible(accessible);
@@ -206,11 +210,9 @@ public class SelectFactory {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        return sql;
     }
 
-    private static <Q, T> SQL createOrderBy(Q queryObj, SqlEntity<T> sqlEntity, AbstractJoin<?>[] joins) {
-        SQL sql = sqlEntity.getSql();
+    private static <Q, T> void createOrderBy(Q queryObj, SelectEntity<T> selectEntity, AbstractJoin<?>[] joins) {
         List<Field> fields = getAllFields(queryObj, joins);
         for (Field field : fields) {
             boolean accessible = field.isAccessible();
@@ -220,11 +222,10 @@ public class SelectFactory {
                 String fieldName = AnnoUtil.getFieldName(field);
                 String sort = orderBy.value() ? SqlConstant._ASC_ : SqlConstant._DESC_;
                 String segment = fieldName + sort;
-                sql.ORDER_BY(segment);
+                selectEntity.getOrderByList().add(segment);
             }
             field.setAccessible(accessible);
         }
-        return sql;
     }
 
     private static <Q, T> List<Field> getAllFields(Q queryObj, AbstractJoin<?>[] joins) {

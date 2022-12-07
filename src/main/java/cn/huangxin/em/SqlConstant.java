@@ -8,6 +8,20 @@ public interface SqlConstant {
     String SELECT = "SELECT";
     String SELECT_ = "SELECT ";
 
+    String INSERT_INTO = "INSERT INTO";
+    String INSERT_INTO_ = "INSERT INTO ";
+
+    String VALUES_ = "VALUE ";
+
+    String ITEM = "item";
+
+    String PRE_SCRIPT = "<script>\n";
+    String POST_SCRIPT = "\n</script>";
+
+    String PRE_BATCH_SCRIPT = "<foreach collection=\"list\" separator=\",\" item=\"" + ITEM + "\">\n";
+    String POST_BATCH_SCRIPT = "\n</foreach>";
+
+
     String FROM = "FROM";
     String FROM_ = "FROM ";
 
@@ -16,7 +30,6 @@ public interface SqlConstant {
 
     String LEFT_JOIN = "LEFT JOIN";
     String LEFT_JOIN_ = "LEFT JOIN ";
-
 
 
     String ON = "ON";

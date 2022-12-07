@@ -3,7 +3,9 @@ package cn.huangxin.demo;
 import cn.huangxin.demo.domain.Hero;
 import cn.huangxin.demo.domain.Way;
 import cn.huangxin.demo.domain.vo.HeroVo;
-import cn.huangxin.em.SqlEntity;
+import cn.huangxin.em.factory.InsertEntity;
+import cn.huangxin.em.factory.InsertFactory;
+import cn.huangxin.em.factory.SelectEntity;
 import cn.huangxin.em.factory.SelectFactory;
 import cn.huangxin.em.join.LeftJoin;
 import cn.huangxin.em.mapper.SqlMapper;
@@ -12,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 提示：SqlMapper,SqlEntity,LeftJoin,SelectFactory均为easy-mybatis内置类
@@ -35,17 +37,18 @@ public class AppTest {
     void testOne() {
         Hero hero = new Hero();
         hero.setName("菲欧娜");
-         // 等价于,SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (name LIKE CONCAT('%',?,'%'))
-        SqlEntity<Hero> sqlEntity = SelectFactory.getSql(hero);
-        Hero selectOne = sqlMapper.selectOne(sqlEntity);
-        System.out.println(selectOne);
+        // 等价于,SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (name LIKE CONCAT('%',?,'%'))
+        SelectEntity<Hero> selectEntity = SelectFactory.getSql(hero);
+        System.out.println(selectEntity.getSql().toString());
+//        Hero selectOne = sqlMapper.selectOne(sqlEntity);
+//        System.out.println(selectOne);
     }
 
     @Test
     void testById() {
         // 等价于，SELECT id AS id, way_id AS wayId, name AS name FROM hero WHERE (id = ?)
-        SqlEntity<Hero> sqlEntity = SelectFactory.getSqlById(1, Hero.class);
-        Hero hero = sqlMapper.selectOne(sqlEntity);
+        SelectEntity<Hero> selectEntity = SelectFactory.getSqlById(1, Hero.class);
+        Hero hero = sqlMapper.selectOne(selectEntity);
         System.out.println(hero);
     }
 
@@ -63,8 +66,8 @@ public class AppTest {
         LEFT OUTER JOIN way ON hero.way_id = way.id AND way.way = ?
         WHERE (name LIKE CONCAT('%',?,'%'))
          */
-        SqlEntity<HeroVo> sqlEntity = SelectFactory.getSql(hero, HeroVo.class, leftJoin);
-        HeroVo heroVo = sqlMapper.selectOne(sqlEntity);
+        SelectEntity<HeroVo> selectEntity = SelectFactory.getSql(hero, HeroVo.class, leftJoin);
+        HeroVo heroVo = sqlMapper.selectOne(selectEntity);
         System.out.println(heroVo);
     }
 
@@ -82,24 +85,22 @@ public class AppTest {
         Hero hero = new Hero();
         hero.setWayId(5);
         hero.setName("布隆");
-        sqlMapper.sqlInsert("INSERT INTO `em_demo`.`hero` (`way_id`, `name`) VALUES (#{wayId}, #{name})", hero);
-        System.out.println(hero);
+        Hero hero1 = new Hero();
+        hero1.setWayId(5);
+        hero1.setName("布隆");
+        List<Hero> heroes = new ArrayList<>();
+        heroes.add(hero);
+        heroes.add(hero1);
+        InsertEntity insert = InsertFactory.getBatchSql(heroes);
+        sqlMapper.insert(insert);
+        System.out.println();
     }
 
-    @Test
-    void testSession() throws IOException, InterruptedException {
-        testById();
-        testById();
-        testUpdate();
-        testById();
-    }
+
 
     @Test
-    void testLast() {
-        testInsert();
-        testInsert();
-        Map<String, Object> map = sqlMapper.selectOne("SELECT LAST_INSERT_ID()");
-         System.out.println();
+    void testHero() {
+
     }
 
 
