@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface SqlBuild<T> {
 
-    default  <R> String getColumn(SerializableFunction<R, ?> function) {
+    default <R> String getColumn(SerializableFunction<R, ?> function) {
         String tableName = FunctionUtil.getTableName(function);
         String columnName = FunctionUtil.getColumnName(function);
         return tableName + SqlConstant.DOT + columnName;

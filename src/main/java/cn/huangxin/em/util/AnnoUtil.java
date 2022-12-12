@@ -31,6 +31,11 @@ public class AnnoUtil {
         return camelToUnderscore(Introspector.decapitalize(aClass.getSimpleName()));
     }
 
+    /**
+     * 获取主键变量名
+     * @param aClass
+     * @return
+     */
     public static String getPrimaryName(Class<?> aClass) {
         List<Field> fields = CommonUtil.getFields(aClass, new ArrayList<>());
         for (Field field : fields) {
@@ -41,6 +46,11 @@ public class AnnoUtil {
         return "id";
     }
 
+    /**
+     * 获取主键字段名
+     * @param aClass
+     * @return
+     */
     public static String getPrimaryColumn(Class<?> aClass) {
         List<Field> fields = CommonUtil.getFields(aClass, new ArrayList<>());
         for (Field field : fields) {

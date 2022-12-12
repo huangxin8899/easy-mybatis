@@ -63,44 +63,44 @@ public enum QueryType {
             case EQ:
                 segment.append(column)
                         .append(SqlConstant._EQUAL_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case NE:
                 segment.append(column)
                         .append(SqlConstant._NOT_EQUAL_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case GT:
                 segment.append(column)
                         .append(SqlConstant._GT_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case GE:
                 segment.append(column)
                         .append(SqlConstant._GE_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case LT:
                 segment.append(column)
                         .append(SqlConstant._LT_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case LE:
                 segment.append(column)
                         .append(SqlConstant._LE_)
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM);
+                        .append(SqlConstant.wrapParam(paramName));
                 paramMap.put(paramName, param);
                 break;
             case LIKE:
                 segment.append(column)
                         .append(SqlConstant._LIKE_)
                         .append("CONCAT('%',")
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM)
+                        .append(SqlConstant.wrapParam(paramName))
                         .append(",'%')");
                 paramMap.put(paramName, param);
                 break;
@@ -109,7 +109,7 @@ public enum QueryType {
                         .append(SqlConstant._NOT_)
                         .append(SqlConstant.LIKE_)
                         .append("CONCAT('%',")
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM)
+                        .append(SqlConstant.wrapParam(paramName))
                         .append(",'%')");
                 paramMap.put(paramName, param);
                 break;
@@ -117,7 +117,7 @@ public enum QueryType {
                 segment.append(column)
                         .append(SqlConstant._LIKE_)
                         .append("CONCAT('%',")
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM)
+                        .append(SqlConstant.wrapParam(paramName))
                         .append(")");
                 paramMap.put(paramName, param);
                 break;
@@ -125,7 +125,7 @@ public enum QueryType {
                 segment.append(column)
                         .append(SqlConstant._LIKE_)
                         .append("CONCAT(")
-                        .append(SqlConstant.PRE_PARAM).append(paramName).append(SqlConstant.POST_PARAM)
+                        .append(SqlConstant.wrapParam(paramName))
                         .append(",'%')");
                 paramMap.put(paramName, param);
                 break;
@@ -230,9 +230,7 @@ public enum QueryType {
         param.forEach(arg -> {
             StringBuilder argBuilder = new StringBuilder();
             String argName = SqlConstant.ARG + paramMap.size();
-            argBuilder.append(SqlConstant.PRE_PARAM)
-                    .append(argName)
-                    .append(SqlConstant.POST_PARAM);
+            argBuilder.append(SqlConstant.wrapParam(argName));
             paramMap.put(argName, arg);
             joiner.add(argBuilder);
         });

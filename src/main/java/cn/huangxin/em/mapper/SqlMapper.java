@@ -2,6 +2,7 @@ package cn.huangxin.em.mapper;
 
 import cn.huangxin.em.factory.InsertEntity;
 import cn.huangxin.em.factory.SelectEntity;
+import cn.huangxin.em.factory.UpdateEntity;
 import cn.huangxin.em.util.AnnoUtil;
 import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.exceptions.TooManyResultsException;
@@ -50,6 +51,15 @@ public class SqlMapper implements SqlBaseMapper {
         return this.sqlInsert(insertEntity.getScript(), insertEntity.getMateObj());
     }
 
+    @Override
+    public int update(UpdateEntity updateEntity) {
+        return this.sqlUpdate(updateEntity.getSql().toString(), updateEntity.getParamMap());
+    }
+
+    public int updateBatchById(UpdateEntity updateEntity) {
+        return this.sqlUpdate(updateEntity.getScript(), updateEntity.getMateObj());
+    }
+
     private <T> T getOne(List<T> list) {
         if (list.size() == 1) {
             return list.get(0);
@@ -68,7 +78,7 @@ public class SqlMapper implements SqlBaseMapper {
      * @param resultType 具体类型
      * @return List<T>
      */
-    private  <T> List<T> selectList(String sql, Object value, Class<T> resultType) {
+    private <T> List<T> selectList(String sql, Object value, Class<T> resultType) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
             Class<?> parameterType = value != null ? value.getClass() : null;
@@ -105,22 +115,6 @@ public class SqlMapper implements SqlBaseMapper {
         }
     }
 
-
-    /**
-     * 更新数据
-     *
-     * @param sql sql语句
-     * @return int
-     */
-    @Override
-    public int sqlUpdate(String sql) {
-        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
-            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
-            String msId = msUtils.update(sql);
-            return sqlSession.update(msId);
-        }
-    }
-
     /**
      * 更新数据
      *
@@ -128,13 +122,26 @@ public class SqlMapper implements SqlBaseMapper {
      * @param value 参数
      * @return int
      */
-    @Override
-    public int sqlUpdate(String sql, Object value) {
+    private int sqlUpdate(String sql, Object value) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
             MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
             Class<?> parameterType = value != null ? value.getClass() : null;
             String msId = msUtils.updateDynamic(sql, parameterType);
             return sqlSession.update(msId, value);
+        }
+    }
+
+    private int sqlUpdateBatch(List<UpdateEntity> updateEntityList) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession(true)) {
+            MSUtils msUtils = new MSUtils(sqlSession.getConfiguration());
+            int i = 0;
+            for (UpdateEntity updateEntity : updateEntityList) {
+                Object value = updateEntity.getParamMap();
+                Class<?> parameterType = value != null ? value.getClass() : null;
+                String msId = msUtils.updateDynamic(updateEntity.getSql().toString(), parameterType);
+                i += sqlSession.update(msId, value);
+            }
+            return i;
         }
     }
 

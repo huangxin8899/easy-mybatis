@@ -1,7 +1,6 @@
 package cn.huangxin.em.util;
 
 import cn.huangxin.em.SerializableFunction;
-import cn.huangxin.em.anno.From;
 
 import java.beans.Introspector;
 import java.lang.invoke.SerializedLambda;

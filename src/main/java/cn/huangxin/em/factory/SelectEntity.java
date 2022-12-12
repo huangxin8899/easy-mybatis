@@ -1,28 +1,20 @@
 package cn.huangxin.em.factory;
 
-import cn.huangxin.em.SqlBuild;
-import cn.huangxin.em.QueryType;
-import cn.huangxin.em.SerializableFunction;
-import cn.huangxin.em.util.CommonUtil;
 import org.apache.ibatis.jdbc.SQL;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * @author 黄鑫
  * @description SqlEntity
  */
-public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<T>> {
+public class SelectEntity<T> extends ConditionEntity<SelectEntity<T>> {
 
     private Class<T> type;
 
     private final List<String> selectList = new ArrayList<>();
     private final List<String> fromList = new ArrayList<>();
-    private final List<String> whereList = new ArrayList<>();
     private final List<String> joinList = new ArrayList<>();
     private final List<String> innerJoinList = new ArrayList<>();
     private final List<String> outerJoinList = new ArrayList<>();
@@ -31,9 +23,6 @@ public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<
     private final List<String> orderByList = new ArrayList<>();
     private final List<String> groupByList = new ArrayList<>();
     private final List<String> havingList = new ArrayList<>();
-    private final Map<Integer, List<String>> orMap = new HashMap<>();
-    private Boolean isOr = Boolean.FALSE;
-    private Integer orNum = 0;
 
     List<String> getSelectList() {
         return selectList;
@@ -41,10 +30,6 @@ public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<
 
     List<String> getFromList() {
         return fromList;
-    }
-
-    List<String> getWhereList() {
-        return whereList;
     }
 
     List<String> getJoinList() {
@@ -79,35 +64,6 @@ public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<
         return havingList;
     }
 
-    @Override
-    public <R> SelectEntity<T> apply(boolean flag, QueryType queryType, SerializableFunction<R, ?> function, Object param) {
-        if (flag) {
-            String resolve = QueryType.resolve(queryType, this.getColumn(function), param, this.paramMap);
-            if (CommonUtil.isNotEmptyStr(resolve)) {
-                if (this.isOr) {
-                    this.orMap.get(this.orNum).add(resolve);
-                } else {
-                    this.whereList.add(resolve);
-                }
-            }
-        }
-        return this;
-    }
-
-    @Override
-    public SelectEntity<T> apply(boolean flag, QueryType queryType, String column, Object param) {
-        if (flag) {
-            String resolve = QueryType.resolve(queryType, column, param, this.paramMap);
-            if (CommonUtil.isNotEmptyStr(resolve)) {
-                if (this.isOr) {
-                    this.orMap.get(this.orNum).add(resolve);
-                } else {
-                    this.whereList.add(resolve);
-                }
-            }
-        }
-        return this;
-    }
 
     @Override
     protected void inject() {
@@ -150,7 +106,8 @@ public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<
         }
     }
 
-    public SelectEntity(Class<T> type) {
+    public SelectEntity(Object mateObj, Class<T> type) {
+        this.mateObj = mateObj;
         this.type = type;
     }
 
@@ -158,23 +115,5 @@ public class SelectEntity<T> extends SqlEntity implements SqlBuild<SelectEntity<
         return type;
     }
 
-
-    public SelectEntity<T> or(Consumer<SelectEntity<T>> consumer) {
-        return or(true, consumer);
-    }
-
-    public SelectEntity<T> or(boolean flag, Consumer<SelectEntity<T>> consumer) {
-        if (flag) {
-            try {
-                this.isOr = Boolean.TRUE;
-                this.orNum++;
-                this.orMap.put(this.orNum, new ArrayList<>());
-                consumer.accept(this);
-            } finally {
-                this.isOr = Boolean.FALSE;
-            }
-        }
-        return this;
-    }
 
 }

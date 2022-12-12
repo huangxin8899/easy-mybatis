@@ -18,8 +18,26 @@ public interface SqlConstant {
     String PRE_SCRIPT = "<script>\n";
     String POST_SCRIPT = "\n</script>";
 
-    String PRE_BATCH_SCRIPT = "<foreach collection=\"list\" separator=\",\" item=\"" + ITEM + "\">\n";
-    String POST_BATCH_SCRIPT = "\n</foreach>";
+    String PRE_FOREACH_SCRIPT = "\n<foreach collection=\"list\" separator=\",\" item=\"" + ITEM + "\">\n";
+    String POST_FOREACH_SCRIPT = "\n</foreach>\n";
+
+    String UPDATE = "UPDATE";
+    String UPDATE_ = "UPDATE ";
+
+    String POST_TRIM = "\n</trim>\n";
+
+    String SET_SCRIPT = "\n<trim prefix=\"set\" suffixOverrides=\",\">\n";
+
+    String PRE_CASE_SCRIPT = "\n<trim prefix=\"";
+    String POST_CASE_SCRIPT = " = CASE\" suffix=\"END,\">\n";
+
+    String WHEN = "WHEN";
+    String WHEN_ = "WHEN ";
+
+
+    String THEN = "THEN";
+    String THEN_ = "THEN ";
+    String _THEN_ = " THEN ";
 
 
     String FROM = "FROM";
@@ -35,6 +53,10 @@ public interface SqlConstant {
     String ON = "ON";
     String ON_ = "ON ";
     String _ON_ = " ON ";
+
+    String WHERE = "WHERE";
+    String WHERE_ = "WHERE ";
+    String _WHERE_ = " WHERE ";
 
 
     String AND = "AND";
@@ -119,4 +141,11 @@ public interface SqlConstant {
     String DESC_ = "DESC ";
     String _DESC_ = " DESC ";
 
+    static String wrapParam(String paramName) {
+        return PRE_PARAM + paramName + POST_PARAM;
+    }
+
+    static String wrapScript(String script) {
+        return PRE_SCRIPT + script + POST_SCRIPT;
+    }
 }

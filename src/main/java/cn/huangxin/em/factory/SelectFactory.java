@@ -23,7 +23,7 @@ public class SelectFactory {
 
 
     public static <T> SelectEntity<T> getSqlById(Serializable id, Class<T> resultClass) {
-        SelectEntity<T> selectEntity = new SelectEntity<>(resultClass);
+        SelectEntity<T> selectEntity = new SelectEntity<>(id, resultClass);
         // select部分生成
         createSelectSegment(resultClass, selectEntity);
 
@@ -51,7 +51,7 @@ public class SelectFactory {
     public static <Q, T> SelectEntity<T> getSql(boolean enableAnno, Q queryObj, Class<T> resultClass, AbstractJoin<?>... joins) {
 
 
-        SelectEntity<T> selectEntity = new SelectEntity<>(resultClass);
+        SelectEntity<T> selectEntity = new SelectEntity<>(queryObj, resultClass);
 
         // select部分生成
         createSelectSegment(resultClass, selectEntity);

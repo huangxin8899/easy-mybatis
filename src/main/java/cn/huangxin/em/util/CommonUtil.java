@@ -1,10 +1,11 @@
 package cn.huangxin.em.util;
 
-import java.lang.reflect.*;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,7 +15,9 @@ import java.util.regex.Pattern;
  */
 public class CommonUtil {
 
-    /** 空字符串 */
+    /**
+     * 空字符串
+     */
     private static final String EMPTY = "";
 
 
@@ -59,6 +62,7 @@ public class CommonUtil {
 
     /**
      * 驼峰转下划线.
+     *
      * @param value
      * @return
      */
@@ -67,7 +71,7 @@ public class CommonUtil {
         Matcher matcher = Pattern.compile(regex).matcher(value);
         while (matcher.find()) {
             String target = matcher.group();
-            value = value.replaceAll(target, "_"+target.toLowerCase());
+            value = value.replaceAll(target, "_" + target.toLowerCase());
         }
         return value;
     }
@@ -233,7 +237,33 @@ public class CommonUtil {
         }
     }
 
-    public boolean isColl(Class<?> clazz) {
+    public static boolean isColl(Class<?> clazz) {
         return Collection.class.isAssignableFrom(clazz) || clazz.isArray();
+    }
+
+    public static void fieldConsumer(Class<?> clazz, Consumer<Field> consumer) {
+        List<Field> fields = getFields(clazz, new ArrayList<>());
+        for (Field field : fields) {
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            consumer.accept(field);
+            field.setAccessible(accessible);
+        }
+    }
+
+    public static void fieldPredicate(Class<?> clazz, Predicate<Field> predicate) {
+        List<Field> fields = getFields(clazz, new ArrayList<>());
+        for (Field field : fields) {
+            boolean accessible = field.isAccessible();
+            field.setAccessible(true);
+            if (predicate.test(field)) {
+                break;
+            }
+            field.setAccessible(accessible);
+        }
+    }
+
+    public static boolean isNumeric(Class<?> cls) {
+        return cls.isPrimitive() || Number.class.isAssignableFrom(cls);
     }
 }

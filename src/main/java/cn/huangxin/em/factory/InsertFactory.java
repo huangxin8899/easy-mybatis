@@ -68,7 +68,7 @@ public class InsertFactory {
                 if (val == null) {
                     continue;
                 }
-                joiner.add(SqlConstant.PRE_PARAM + field.getName() + SqlConstant.POST_PARAM);
+                joiner.add(SqlConstant.wrapParam(field.getName()));
                 field.setAccessible(accessible);
             }
             segment.append(SqlConstant.VALUES_).append(joiner);
@@ -93,11 +93,11 @@ public class InsertFactory {
     private static <Insert> String createBatchValues(Insert insertObj) {
         StringBuilder segment = new StringBuilder();
         List<Field> fields = getFields(insertObj.getClass(), new ArrayList<>());
-        StringJoiner joiner = new StringJoiner(SqlConstant.COMMA, SqlConstant.PRE_BATCH_SCRIPT + SqlConstant.PRE_IN, SqlConstant.POST_IN + SqlConstant.POST_BATCH_SCRIPT);
+        StringJoiner joiner = new StringJoiner(SqlConstant.COMMA, SqlConstant.PRE_FOREACH_SCRIPT + SqlConstant.PRE_IN, SqlConstant.POST_IN + SqlConstant.POST_FOREACH_SCRIPT);
         for (Field field : fields) {
             boolean accessible = field.isAccessible();
             field.setAccessible(true);
-            joiner.add(SqlConstant.PRE_PARAM + SqlConstant.ITEM + SqlConstant.DOT + field.getName() + SqlConstant.POST_PARAM);
+            joiner.add(SqlConstant.wrapParam(SqlConstant.ITEM + SqlConstant.DOT + field.getName()));
             field.setAccessible(accessible);
         }
         segment.append(SqlConstant.VALUES_).append(joiner);
