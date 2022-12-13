@@ -122,8 +122,9 @@ public class UpdateFactory {
                 .append(SqlConstant.POST_CASE_SCRIPT)
                 .append("<foreach collection=\"list\" item=\"item\">");
         boolean allow = !field.isAnnotationPresent(AllowNull.class);
+        boolean isNumber = CommonUtil.isNumeric(field.getType());
         if (allow) {
-            if (CommonUtil.isNumeric(field.getType())) {
+            if (isNumber) {
                 segment.append("<if test=\"")
                         .append(paramName)
                         .append(" != null\">\n");
@@ -143,6 +144,24 @@ public class UpdateFactory {
                 .append(SqlConstant.wrapParam(paramName));
         if (allow) {
             segment.append("\n</if>\n");
+            if (isNumber) {
+                segment.append("<if test=\"")
+                        .append(paramName)
+                        .append(" == null\">\n");
+            } else {
+                segment.append("<if test=\"")
+                        .append(paramName)
+                        .append(" == null and ")
+                        .append(paramName)
+                        .append(" == '' \">\n");
+            }
+            segment.append(SqlConstant.WHEN_)
+                    .append(primaryColumn)
+                    .append(SqlConstant._EQUAL_)
+                    .append(SqlConstant.wrapParam(primaryName))
+                    .append(SqlConstant._THEN_)
+                    .append(fieldName)
+                    .append("\n</if>\n");
         }
         segment.append(SqlConstant.POST_FOREACH_SCRIPT)
                 .append(SqlConstant.POST_TRIM);
